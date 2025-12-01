@@ -1,30 +1,67 @@
+name: Release
+
 on:
   release:
     types: [created]
 
-permissions:
-    contents: write
-    packages: write
-
 jobs:
-  releases-matrix:
-    name: Release Go Binary
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
-        goos: [windows, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goarch: "386"
-            goos: darwin
-          - goarch: arm64
-            goos: windows
+        include:
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+          - os: windows
+            arch: amd64
+          - os: darwin
+            arch: amd64
+          - os: darwin
+            arch: arm64
+    
     steps:
-    - uses: actions/checkout@v4
-    - uses: wangyoucao577/go-release-action@v1
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: ${{ matrix.goos }}
-        goarch: ${{ matrix.goarch }}
-        binary_name: "pandorasbank"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.4'
+
+      - name: Install fyne-cross
+        run: go install github.com/fyne-io/fyne-cross@latest
+
+      - name: Build with fyne-cross
+        run: |
+          fyne-cross ${{ matrix.os }} -arch ${{ matrix.arch }} -app-id com.yourcompany.yourapp
+
+      - name: Prepare artifact name
+        id: artifact
+        run: |
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            echo "name=yourapp-${{ matrix.os }}-${{ matrix.arch }}.exe" >> $GITHUB_OUTPUT
+            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/yourapp.exe" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.os }}" = "darwin" ]; then
+            echo "name=yourapp-${{ matrix.os }}-${{ matrix.arch }}.zip" >> $GITHUB_OUTPUT
+            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/yourapp.app" >> $GITHUB_OUTPUT
+          else
+            echo "name=yourapp-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/yourapp" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Package macOS app
+        if: matrix.os == 'darwin'
+        run: |
+          cd fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}
+          zip -r yourapp.zip yourapp.app
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'release'
+        with:
+          files: |
+            ${{ steps.artifact.outputs.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
