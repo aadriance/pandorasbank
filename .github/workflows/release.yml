@@ -35,15 +35,15 @@ jobs:
         run: |
           fyne-cross ${{ matrix.os }} -arch ${{ matrix.arch }} -app-id com.primaryartemis.pandorasbank
       
-      - name: Prepare artifact name
+      - name: Rename and prepare artifact
         id: artifact
         run: |
           if [ "${{ matrix.os }}" = "windows" ]; then
-            echo "name=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}.exe" >> $GITHUB_OUTPUT
-            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank.exe" >> $GITHUB_OUTPUT
+            cp fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank.exe pandorasbank-${{ matrix.os }}-${{ matrix.arch }}.exe
+            echo "path=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}.exe" >> $GITHUB_OUTPUT
           else
-            echo "name=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
-            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank" >> $GITHUB_OUTPUT
+            cp fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank pandorasbank-${{ matrix.os }}-${{ matrix.arch }}
+            echo "path=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
           fi
       
       - name: Upload Release Asset
@@ -81,9 +81,13 @@ jobs:
         run: |
           fyne package -os darwin -name pandorasbank -appID com.primaryartemis.pandorasbank
       
+      - name: Ad-hoc sign the app
+        run: |
+          codesign --force --deep --sign - pandorasbank.app
+      
       - name: Package macOS app
         run: |
-          zip -r pandorasbank-darwin-${{ matrix.arch }}.zip pandorasbank.app
+          ditto -c -k --keepParent pandorasbank.app pandorasbank-darwin-${{ matrix.arch }}.zip
       
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
