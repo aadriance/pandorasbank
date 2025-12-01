@@ -63,9 +63,19 @@ type StorageBox struct {
 	Entries []StorageEntry `json:"entries"`
 }
 
+type ActiveBoons struct {
+	ActiveBoonNames  []string `json:"ActiveBoonNames"`
+	BoonUsageCounts  []int    `json:"BoonUsageCounts"`
+}
+
 type GameSave struct {
-	ActivePlayerData PlayerData   `json:"activePlayerData"`
-	StorageBoxes     []StorageBox `json:"storageBoxes"`
+	ActivePlayerData  PlayerData   `json:"activePlayerData"`
+	StorageBoxes      []StorageBox `json:"storageBoxes"`
+	GameFlags         []string     `json:"gameFlags"`
+	ActiveBoons       ActiveBoons  `json:"activeBoons"`
+	CurrentSceneName  string       `json:"currentSceneName"`
+	SaveVersion       string       `json:"saveVersion"`
+	SaveTimestamp     string       `json:"saveTimestamp"`
 }
 
 type Settings struct {
