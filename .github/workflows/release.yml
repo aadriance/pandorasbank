@@ -35,27 +35,27 @@ jobs:
 
       - name: Build with fyne-cross
         run: |
-          fyne-cross ${{ matrix.os }} -arch ${{ matrix.arch }} -app-id com.yourcompany.yourapp
+          fyne-cross ${{ matrix.os }} -arch ${{ matrix.arch }} -app-id com.primaryartemis.pandorasbank
 
       - name: Prepare artifact name
         id: artifact
         run: |
           if [ "${{ matrix.os }}" = "windows" ]; then
-            echo "name=yourapp-${{ matrix.os }}-${{ matrix.arch }}.exe" >> $GITHUB_OUTPUT
-            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/yourapp.exe" >> $GITHUB_OUTPUT
+            echo "name=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}.exe" >> $GITHUB_OUTPUT
+            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank.exe" >> $GITHUB_OUTPUT
           elif [ "${{ matrix.os }}" = "darwin" ]; then
-            echo "name=yourapp-${{ matrix.os }}-${{ matrix.arch }}.zip" >> $GITHUB_OUTPUT
-            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/yourapp.app" >> $GITHUB_OUTPUT
+            echo "name=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}.zip" >> $GITHUB_OUTPUT
+            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank.app" >> $GITHUB_OUTPUT
           else
-            echo "name=yourapp-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
-            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/yourapp" >> $GITHUB_OUTPUT
+            echo "name=pandorasbank-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+            echo "path=fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}/pandorasbank" >> $GITHUB_OUTPUT
           fi
 
       - name: Package macOS app
         if: matrix.os == 'darwin'
         run: |
           cd fyne-cross/bin/${{ matrix.os }}-${{ matrix.arch }}
-          zip -r yourapp.zip yourapp.app
+          zip -r pandorasbank.zip pandorasbank.app
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
