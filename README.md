@@ -3,6 +3,11 @@
 This app can help you manage Elestrals Awakened saves and Elestrals, and allows for some fun customization options like
 gender selection for the player and Elestrals Nicknames.
 
+> [!CAUTION]
+> Back-up your save manually before using the app. You can find it at
+> users/<user>/AppData/LocalLow/DefaultCompany/ElestralsAwakened-Playtest/gamesave.json
+> by default.
+
 ## Features
 
 - Back up and restore of saves
@@ -13,6 +18,8 @@ gender selection for the player and Elestrals Nicknames.
 ## Installation
 
 Download from the releases page for your platofrm. Move it to your desited location.
+
+Note: The linux build is funcitonal but untested.
 
 ## Updates
 
@@ -48,12 +55,15 @@ almost certainly be thrown away when alpha comes around.
 
 Yeh, it's missing so she just zooms while standing. Everything else about her seems to be fine though.
 
-> Linux / Steam Deck support when?
+> Why does my Elestral not follow me in the overworld?
 
-In theory the app will work on linux. I've not been able to set up a linux gaming environment to test it though. I'd be happy
-to enable releases for it though if someone in the community does the confirmation work for me and tells me where the default
-save location is.
+Nicknamed elestrals do no have an overworld model. It appears the game uses the nickname field for overworld models.
+(Yes if you change the name to another Elestral it will look like it in the overworld).
+Simply change the Elestral name back to see it in the overworld.
 
+> Where is the save button?
+
+Saves are automatic as edits are made.
 
 ## DISCLAIMER
 
