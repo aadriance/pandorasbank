@@ -17,42 +17,83 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+type CombatPos struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+	Z float64 `json:"z"`
+}
+
+type StatStages struct {
+	PhysicalAttack  int `json:"physicalAttack"`
+	AstralAttack    int `json:"astralAttack"`
+	PhysicalDefense int `json:"physicalDefense"`
+	AstralDefense   int `json:"astralDefense"`
+	Speed           int `json:"speed"`
+	Accuracy        int `json:"accuracy"`
+	Evasion         int `json:"evasion"`
+}
+
 type Elestral struct {
 	ID struct {
 		SerializedVersion string `json:"serializedVersion"`
 		Hash              string `json:"Hash"`
 	} `json:"id"`
-	Name               string  `json:"name"`
-	Species            string  `json:"species"`
-	UsesStellarMaterial bool   `json:"usesStellarMaterial"`
-	Element            int     `json:"element"`
-	SubElement         int     `json:"subElement"`
-	HealthBaseStat     int     `json:"healthBaseStat"`
-	PhysicalAttack     int     `json:"physicalAttack"`
-	SpecialAttack      int     `json:"specialAttack"`
-	PhysicalDefense    int     `json:"physicalDefense"`
-	SpecialDefense     int     `json:"specialDefense"`
-	Speed              int     `json:"speed"`
-	Ability0Name       string  `json:"Ability0Name"`
-	Ability1Name       string  `json:"Ability1Name"`
-	Ability2Name       string  `json:"Ability2Name"`
-	Ability3Name       string  `json:"Ability3Name"`
-	EmpoweredAbilityName string `json:"empoweredAbilityName"`
-	CurrentLevel       int     `json:"currentLevel"`
-	Health             int     `json:"health"`
-	MaxHealth          int     `json:"maxHealth"`
-	IsStellar          bool    `json:"isStellar"`
+	Name                        string     `json:"name"`
+	Species                     string     `json:"species"`
+	UsesStellarMaterial         bool       `json:"usesStellarMaterial"`
+	Element                     int        `json:"element"`
+	SubElement                  int        `json:"subElement"`
+	HealthBaseStat              int        `json:"healthBaseStat"`
+	PhysicalAttack              int        `json:"physicalAttack"`
+	SpecialAttack               int        `json:"specialAttack"`
+	PhysicalDefense             int        `json:"physicalDefense"`
+	SpecialDefense              int        `json:"specialDefense"`
+	Speed                       int        `json:"speed"`
+	Ability0Name                string     `json:"Ability0Name"`
+	Ability1Name                string     `json:"Ability1Name"`
+	Ability2Name                string     `json:"Ability2Name"`
+	Ability3Name                string     `json:"Ability3Name"`
+	EmpoweredAbilityName        string     `json:"empoweredAbilityName"`
+	CurrentLevel                int        `json:"currentLevel"`
+	Health                      int        `json:"health"`
+	MaxHealth                   int        `json:"maxHealth"`
+	IsActiveCombat              bool       `json:"isActiveInCombat"`
+	IsDodgeEnabled              bool       `json:"isDodgeEnabled"`
+	IsCaster                    bool       `json:"isCaster"`
+	IsStellar                   bool       `json:"isStellar"`
+	TeamSlot                    int        `json:"teamSlot"`
+	AbilityHitIndex             int        `json:"abilityHitIndex"`
+	BondMeter                   int        `json:"bondMeter"`
+	TurnOrderUIIndex            int        `json:"turnOrderUIIndex"`
+	SelectedAbilityIndex        int        `json:"selectedAbilityIndex"`
+	ShouldSkipTurn              bool       `json:"shouldSkipTurn"`
+	LastDodgeTime               float64    `json:"lastDodgeTime"`
+	LastSuccessfulDodgeTime     float64    `json:"lastSuccessfulDodgeTime"`
+	CombatPos                   CombatPos  `json:"CombatPos"`
+	CharacterType               int        `json:"characterType"`
+	StatStages                  StatStages `json:"statStages"`
+	SuppressedSlots             int        `json:"suppressedSlots"`
+	SlotsUsedThisBattle         int        `json:"slotsUsedThisBattle"`
+	IncomingDamageMultiplier    float64    `json:"IncomingDamageMultiplier"`
+	OutgoingDamageMultiplier    float64    `json:"OutgoingDamageMultiplier"`
+	MovesPerformedSinceLastSwap int        `json:"MovesPerformedSinceLastSwap"`
+	LastUsedAbilitySlot         int        `json:"lastUsedAbilitySlot"`
+	HasUsedEmpoweredAbility     bool       `json:"hasUsedEmpoweredAbility"`
 }
 
 type PlayerData struct {
-	Name          string     `json:"Name"`
-	SpiritElement int        `json:"SpiritElement"`
-	IsMaleCharacter bool     `json:"isMaleCharacter"`
-	Money         int        `json:"Money"`
-	Character0    *Elestral  `json:"Character0"`
-	Character1    *Elestral  `json:"Character1"`
-	Character2    *Elestral  `json:"Character2"`
-	Character3    *Elestral  `json:"Character3"`
+	Name            string    `json:"Name"`
+	SpiritElement   int       `json:"SpiritElement"`
+	IsMaleCharacter bool      `json:"isMaleCharacter"`
+	Money           int       `json:"Money"`
+	FocusedSlot     int       `json:"FocusedSlot"`
+	Character0      *Elestral `json:"Character0"`
+	Character1      *Elestral `json:"Character1"`
+	Character2      *Elestral `json:"Character2"`
+	Character3      *Elestral `json:"Character3"`
+	MaxSp           int       `json:"MaxCasterSP"`
+	CurrentSp       int       `json:"CasterSP"`
+	BondMeter       int       `json:"BondMeter"`
 }
 
 type StorageEntry struct {
@@ -64,18 +105,18 @@ type StorageBox struct {
 }
 
 type ActiveBoons struct {
-	ActiveBoonNames  []string `json:"ActiveBoonNames"`
-	BoonUsageCounts  []int    `json:"BoonUsageCounts"`
+	ActiveBoonNames []string `json:"ActiveBoonNames"`
+	BoonUsageCounts []int    `json:"BoonUsageCounts"`
 }
 
 type GameSave struct {
-	ActivePlayerData  PlayerData   `json:"activePlayerData"`
-	StorageBoxes      []StorageBox `json:"storageBoxes"`
-	GameFlags         []string     `json:"gameFlags"`
-	ActiveBoons       ActiveBoons  `json:"activeBoons"`
-	CurrentSceneName  string       `json:"currentSceneName"`
-	SaveVersion       string       `json:"saveVersion"`
-	SaveTimestamp     string       `json:"saveTimestamp"`
+	ActivePlayerData PlayerData   `json:"activePlayerData"`
+	StorageBoxes     []StorageBox `json:"storageBoxes"`
+	GameFlags        []string     `json:"gameFlags"`
+	ActiveBoons      ActiveBoons  `json:"activeBoons"`
+	CurrentSceneName string       `json:"currentSceneName"`
+	SaveVersion      string       `json:"saveVersion"`
+	SaveTimestamp    string       `json:"saveTimestamp"`
 }
 
 type Settings struct {
@@ -497,6 +538,12 @@ func loadGameSave(filePath string) (*GameSave, error) {
 }
 
 func saveGameSave(filePath string, gameSave *GameSave) error {
+	if gameSave.ActivePlayerData.MaxSp == 0 {
+		gameSave.ActivePlayerData.MaxSp = 100
+		gameSave.ActivePlayerData.CurrentSp = 100
+		gameSave.ActivePlayerData.BondMeter = 3
+	}
+
 	data, err := json.MarshalIndent(gameSave, "", "    ")
 	if err != nil {
 		return fmt.Errorf("error marshaling JSON: %w", err)
