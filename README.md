@@ -5,7 +5,7 @@ gender selection for the player and Elestrals Nicknames.
 
 > [!CAUTION]
 > Back-up your save manually before using the app. You can find it at
-> users/<user>/AppData/LocalLow/DefaultCompany/ElestralsAwakened-Playtest/gamesave.json
+> users/YOURUSER/AppData/LocalLow/DefaultCompany/ElestralsAwakened-Playtest/gamesave.json
 > by default.
 
 ## Features
