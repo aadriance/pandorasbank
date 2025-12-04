@@ -279,6 +279,10 @@ func createTeamTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdate f
 				if onBankUpdate != nil {
 					onBankUpdate()
 				}
+				*elestral = Elestral{}
+				if onSave != nil {
+					onSave()
+				}
 				dialog.ShowInformation("Export Successful",
 					fmt.Sprintf("%s has been exported to the bank!", elestral.Name), myWindow)
 			}
@@ -307,6 +311,10 @@ func createStorageTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdat
 				if elestral != nil && elestral.Species != "" {
 					elesCopy := *elestral
 					bank.Elestrals = append(bank.Elestrals, &elesCopy)
+					*entry.CharacterData = Elestral{}
+					if onSave != nil {
+						onSave()
+					}
 					if onBankUpdate != nil {
 						onBankUpdate()
 					}
@@ -359,7 +367,7 @@ func createBankTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdate f
 
 			elesCopy := *eles
 			gameSave.StorageBoxes[boxIdx].Entries[entryIdx].CharacterData = &elesCopy
-
+			bank.Elestrals = append(bank.Elestrals[:index], bank.Elestrals[index+1:]...)
 			if onSave != nil {
 				onSave()
 			}
