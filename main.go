@@ -145,7 +145,7 @@ func getElementName(element int) string {
 	return fmt.Sprintf("Unknown (%d)", element)
 }
 
-func createElestralCard(e *Elestral, onSave func(), onExport func(), onImport func(), onRelease func()) *widget.Card {
+func createElestralCard(e *Elestral, onSave func(), onExport func(), onImport func(), onRelease func(), onMoveToParty func(), partyFull bool) *widget.Card {
 	if e == nil || e.Species == "" {
 		return nil
 	}
@@ -186,6 +186,16 @@ func createElestralCard(e *Elestral, onSave func(), onExport func(), onImport fu
 			onImport()
 		})
 		nameContainerItems = append(nameContainerItems, importBtn)
+	}
+
+	if onMoveToParty != nil {
+		moveToPartyBtn := widget.NewButton("Move to Party", func() {
+			onMoveToParty()
+		})
+		if partyFull {
+			moveToPartyBtn.Disable()
+		}
+		nameContainerItems = append(nameContainerItems, moveToPartyBtn)
 	}
 
 	if onRelease != nil {
@@ -287,7 +297,7 @@ func createTeamTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdate f
 					fmt.Sprintf("%s has been exported to the bank!", elestral.Name), myWindow)
 			}
 		}
-		if card := createElestralCard(e, onSave, onExport, nil, nil); card != nil {
+		if card := createElestralCard(e, onSave, onExport, nil, nil, nil, false); card != nil {
 			cards = append(cards, card)
 		}
 	}
@@ -304,6 +314,12 @@ func createStorageTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdat
 		headerLabel := widget.NewLabel(fmt.Sprintf("Storage Box %d - %d Elestrals", i+1, len(box.Entries)))
 		headerLabel.TextStyle = fyne.TextStyle{Bold: true}
 		cards = append(cards, headerLabel)
+
+		// Check if party is full
+		partyFull := gameSave.ActivePlayerData.Character0 != nil && gameSave.ActivePlayerData.Character0.Species != "" &&
+			gameSave.ActivePlayerData.Character1 != nil && gameSave.ActivePlayerData.Character1.Species != "" &&
+			gameSave.ActivePlayerData.Character2 != nil && gameSave.ActivePlayerData.Character2.Species != "" &&
+			gameSave.ActivePlayerData.Character3 != nil && gameSave.ActivePlayerData.Character3.Species != ""
 
 		for _, entry := range box.Entries {
 			elestral := entry.CharacterData
@@ -322,7 +338,59 @@ func createStorageTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdat
 						fmt.Sprintf("%s has been exported to the bank!", elestral.Name), myWindow)
 				}
 			}
-			if card := createElestralCard(entry.CharacterData, onSave, onExport, nil, nil); card != nil {
+
+			onMoveToParty := func() {
+				if elestral != nil && elestral.Species != "" {
+					// Find first available party slot
+					var targetSlot *Elestral
+					slotName := ""
+					if gameSave.ActivePlayerData.Character0 == nil || gameSave.ActivePlayerData.Character0.Species == "" {
+						targetSlot = gameSave.ActivePlayerData.Character0
+						if targetSlot == nil {
+							targetSlot = &Elestral{}
+							gameSave.ActivePlayerData.Character0 = targetSlot
+						}
+						slotName = "Slot 1"
+					} else if gameSave.ActivePlayerData.Character1 == nil || gameSave.ActivePlayerData.Character1.Species == "" {
+						targetSlot = gameSave.ActivePlayerData.Character1
+						if targetSlot == nil {
+							targetSlot = &Elestral{}
+							gameSave.ActivePlayerData.Character1 = targetSlot
+						}
+						slotName = "Slot 2"
+					} else if gameSave.ActivePlayerData.Character2 == nil || gameSave.ActivePlayerData.Character2.Species == "" {
+						targetSlot = gameSave.ActivePlayerData.Character2
+						if targetSlot == nil {
+							targetSlot = &Elestral{}
+							gameSave.ActivePlayerData.Character2 = targetSlot
+						}
+						slotName = "Slot 3"
+					} else if gameSave.ActivePlayerData.Character3 == nil || gameSave.ActivePlayerData.Character3.Species == "" {
+						targetSlot = gameSave.ActivePlayerData.Character3
+						if targetSlot == nil {
+							targetSlot = &Elestral{}
+							gameSave.ActivePlayerData.Character3 = targetSlot
+						}
+						slotName = "Slot 4"
+					}
+
+					if targetSlot != nil {
+						elestralName := elestral.Name
+						*targetSlot = *elestral
+						*entry.CharacterData = Elestral{}
+						if onSave != nil {
+							onSave()
+						}
+						if onBankUpdate != nil {
+							onBankUpdate()
+						}
+						dialog.ShowInformation("Move Successful",
+							fmt.Sprintf("%s has been moved to party %s!", elestralName, slotName), myWindow)
+					}
+				}
+			}
+
+			if card := createElestralCard(entry.CharacterData, onSave, onExport, nil, nil, onMoveToParty, partyFull); card != nil {
 				cards = append(cards, card)
 			}
 		}
@@ -397,7 +465,7 @@ func createBankTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdate f
 				}, myWindow)
 		}
 
-		if card := createElestralCard(elestral, nil, nil, onImport, onRelease); card != nil {
+		if card := createElestralCard(elestral, nil, nil, onImport, onRelease, nil, false); card != nil {
 			cards = append(cards, card)
 		}
 	}
@@ -413,7 +481,7 @@ func createBankTab(gameSave *GameSave, bank *Bank, onSave func(), onBankUpdate f
 }
 
 func getSettingsFilePath() (string, error) {
-	exePath, err := os.Executable()
+	exePath, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
