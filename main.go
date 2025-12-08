@@ -15,6 +15,9 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+
+	"pandorasbank/quickstart"
+	"pandorasbank/steam"
 )
 
 type CombatPos struct {
@@ -121,6 +124,7 @@ type GameSave struct {
 
 type Settings struct {
 	CustomSavePath string `json:"customSavePath"`
+	CustomGamePath string `json:"customGamePath"`
 }
 
 type Bank struct {
@@ -832,7 +836,14 @@ func main() {
 	defaultSavePath := getDefaultSavePath(settings)
 
 	bankWindow.Tabs = container.NewAppTabs()
-	bankWindow.Footer = container.NewStack(widget.NewLabel("Test Footer"))
+
+	gamePath := steam.GetDefaultGamePath(settings.CustomGamePath)
+
+	_, bankWindow.Footer = quickstart.NewQuickStartUI(bankWindow.Window, gamePath, func(newGamePath string) {
+		settings.CustomGamePath = newGamePath
+	  saveSettings(settings)
+	})
+
 	bankWindow.MainContent = container.NewBorder(nil, bankWindow.Footer, nil, nil, bankWindow.Tabs)
 
 	if defaultSavePath != "" {
