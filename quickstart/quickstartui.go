@@ -37,6 +37,9 @@ func NewQuickStartUI(myWindow fyne.Window, path string, updateCustomApplicationP
 		widget.NewButton("Start Game", func() {
 			startGameButton(ui)
 		}),
+		widget.NewButton("Change Exe", func() {
+			showFilePicker(ui, func() {})
+		}),
 	)
 
 	// Note - currently, stop button replaced with status message
@@ -51,7 +54,7 @@ func NewQuickStartUI(myWindow fyne.Window, path string, updateCustomApplicationP
 
 func startGameButton(ui *quickStartUI) {
 	if !isValidPath(ui.knownPath) {
-		showFilePicker(ui)
+		confirmFilePicker(ui)
 		return
 	}
 
@@ -62,7 +65,7 @@ func startGameButton(ui *quickStartUI) {
 	if err != nil {
 		// Failure to run?  Bad path maybe
 		ui.knownPath = ""
-		showFilePicker(ui)
+		confirmFilePicker(ui)
 		// Good luck to whomever forces this recursion enough times to stackoverflow
 		return
 	}
@@ -72,27 +75,33 @@ func startGameButton(ui *quickStartUI) {
 	ui.container.Refresh()
 }
 
-func showFilePicker(ui *quickStartUI) { 
+func confirmFilePicker(ui *quickStartUI) { 
 	dialog.ShowConfirm("Game executable not located or invalid", "Could not locate your Elestrals Awakened Playtest by default.\n\nWant to select the Elestrals Awakened Playtest executable on your system?", func(result bool) {
 		if result {
-			dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
-				if reader == nil {
-					// No file selected
-					return
-				}
-				defer reader.Close()
-
-				if err != nil {
-					dialog.ShowError(err, ui.window)
-					return
-				}
-
-				ui.knownPath = reader.URI().Path()
-				ui.updateCustomApplicationPath(ui.knownPath)
-
+			showFilePicker(ui, func() {
 				startGameButton(ui)
-			}, ui.window)
+			})
 		}
+	}, ui.window)
+}
+
+func showFilePicker(ui *quickStartUI, onSuccess func()) {
+	dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
+		if reader == nil {
+			// No file selected
+			return
+		}
+		defer reader.Close()
+
+		if err != nil {
+			dialog.ShowError(err, ui.window)
+			return
+		}
+
+		ui.knownPath = reader.URI().Path()
+		ui.updateCustomApplicationPath(ui.knownPath)
+
+		onSuccess()
 	}, ui.window)
 }
 
