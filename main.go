@@ -127,6 +127,18 @@ type Bank struct {
 	Elestrals []*Elestral `json:"elestrals"`
 }
 
+type BankWindow struct {
+	Window fyne.Window
+	MainContent *fyne.Container
+	WelcomeContent *fyne.Container
+	Tabs *container.AppTabs
+	Footer *fyne.Container
+
+	TeamTab *container.TabItem
+	StorageTab *container.TabItem
+	BankTab *container.TabItem
+}
+
 func getElementName(element int) string {
 	elements := map[int]string{
 		0: "N/A",
@@ -738,17 +750,17 @@ func changeDefaultSaveLocation(settings *Settings, myWindow fyne.Window) {
 	}, myWindow)
 }
 
-func displayGameSave(filePath string, myWindow fyne.Window, bank *Bank, tabs **container.AppTabs) {
+func displayGameSave(filePath string, bank *Bank, bankWindow *BankWindow) {
 	gameSave, err := loadGameSave(filePath)
 	if err != nil {
-		dialog.ShowError(err, myWindow)
+		dialog.ShowError(err, bankWindow.Window)
 		return
 	}
 
 	onSave := func() {
 		err := saveGameSave(filePath, gameSave)
 		if err != nil {
-			dialog.ShowError(err, myWindow)
+			dialog.ShowError(err, bankWindow.Window)
 		}
 	}
 
@@ -756,30 +768,35 @@ func displayGameSave(filePath string, myWindow fyne.Window, bank *Bank, tabs **c
 	onBankUpdate = func() {
 		err := saveBank(bank)
 		if err != nil {
-			dialog.ShowError(fmt.Errorf("error saving bank: %w", err), myWindow)
+			dialog.ShowError(fmt.Errorf("error saving bank: %w", err), bankWindow.Window)
 		}
 
-		if *tabs != nil {
-			(*tabs).Items[0].Content = createTeamTab(gameSave, bank, onSave, onBankUpdate, myWindow)
-			(*tabs).Items[1].Content = createStorageTab(gameSave, bank, onSave, onBankUpdate, myWindow)
-			(*tabs).Items[2].Content = createBankTab(gameSave, bank, onSave, onBankUpdate, myWindow)
-			(*tabs).Refresh()
+		if bankWindow.TeamTab != nil {
+			bankWindow.TeamTab.Content = createTeamTab(gameSave, bank, onSave, onBankUpdate, bankWindow.Window)
 		}
+
+		if bankWindow.StorageTab != nil {
+			bankWindow.StorageTab.Content = createStorageTab(gameSave, bank, onSave, onBankUpdate, bankWindow.Window)
+		}
+
+		if bankWindow.BankTab != nil {
+			bankWindow.BankTab.Content = createBankTab(gameSave, bank, onSave, onBankUpdate, bankWindow.Window)
+		}
+
+		bankWindow.Tabs.Refresh()
 	}
 
-	*tabs = container.NewAppTabs(
-		container.NewTabItem("Team", createTeamTab(gameSave, bank, onSave, onBankUpdate, myWindow)),
-		container.NewTabItem("Storage", createStorageTab(gameSave, bank, onSave, onBankUpdate, myWindow)),
-		container.NewTabItem("Bank", createBankTab(gameSave, bank, onSave, onBankUpdate, myWindow)),
-	)
+	bankWindow.Tabs.Append(container.NewTabItem("Team", createTeamTab(gameSave, bank, onSave, onBankUpdate, bankWindow.Window)))
+  bankWindow.Tabs.Append(container.NewTabItem("Storage", createStorageTab(gameSave, bank, onSave, onBankUpdate, bankWindow.Window)))
+  bankWindow.Tabs.Append(container.NewTabItem("Bank", createBankTab(gameSave, bank, onSave, onBankUpdate, bankWindow.Window)))
 
-	myWindow.SetContent(*tabs)
+	bankWindow.Window.SetContent(bankWindow.MainContent)
 }
 
-func showFilePickerDialog(myWindow fyne.Window, bank *Bank, tabs **container.AppTabs) {
+func showFilePickerDialog(bankWindow *BankWindow, bank *Bank) {
 	dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
 		if err != nil {
-			dialog.ShowError(err, myWindow)
+			dialog.ShowError(err, bankWindow.Window)
 			return
 		}
 		if reader == nil {
@@ -788,13 +805,17 @@ func showFilePickerDialog(myWindow fyne.Window, bank *Bank, tabs **container.App
 		defer reader.Close()
 
 		filePath := reader.URI().Path()
-		displayGameSave(filePath, myWindow, bank, tabs)
-	}, myWindow)
+		displayGameSave(filePath, bank, bankWindow)
+	}, bankWindow.Window)
 }
 
 func main() {
 	myApp := app.NewWithID("com.primaryartemis.pandorasbank")
-	myWindow := myApp.NewWindow("Pandora's Bank")
+	bankWindow := BankWindow {
+		Window: myApp.NewWindow("Pandora's Bank"),
+	}
+
+	myWindow := bankWindow.Window
 
 	settings, err := loadSettings()
 	if err != nil {
@@ -808,19 +829,22 @@ func main() {
 		bank = &Bank{Elestrals: []*Elestral{}}
 	}
 
-	var tabs *container.AppTabs
 	defaultSavePath := getDefaultSavePath(settings)
-	var welcomeContent *fyne.Container
+
+	bankWindow.Tabs = container.NewAppTabs()
+	bankWindow.Footer = container.NewStack(widget.NewLabel("Test Footer"))
+	bankWindow.MainContent = container.NewBorder(nil, bankWindow.Footer, nil, nil, bankWindow.Tabs)
+
 	if defaultSavePath != "" {
 		welcomeLabel := widget.NewLabel("Welcome to Pandora's Bank!\n\nA game save file was found at the default location.")
 		welcomeLabel.Alignment = fyne.TextAlignCenter
 
 		openDefaultButton := widget.NewButton("Open Default Save", func() {
-			displayGameSave(defaultSavePath, myWindow, bank, &tabs)
+			displayGameSave(defaultSavePath, bank, &bankWindow)
 		})
 
 		browseButton := widget.NewButton("Browse for Different Save...", func() {
-			showFilePickerDialog(myWindow, bank, &tabs)
+			showFilePickerDialog(&bankWindow, bank)
 		})
 
 		backupButton := widget.NewButton("Backup Save", func() {
@@ -835,7 +859,7 @@ func main() {
 			changeDefaultSaveLocation(settings, myWindow)
 		})
 
-		welcomeContent = container.NewVBox(
+		bankWindow.WelcomeContent = container.NewVBox(
 			widget.NewLabel(""),
 			welcomeLabel,
 			widget.NewLabel(""),
@@ -853,14 +877,14 @@ func main() {
 		welcomeLabel.Alignment = fyne.TextAlignCenter
 
 		openButton := widget.NewButton("Open Game Save", func() {
-			showFilePickerDialog(myWindow, bank, &tabs)
+			showFilePickerDialog(&bankWindow, bank)
 		})
 
 		changeDefaultButton := widget.NewButton("Set Default Save Location", func() {
 			changeDefaultSaveLocation(settings, myWindow)
 		})
 
-		welcomeContent = container.NewVBox(
+		bankWindow.WelcomeContent = container.NewVBox(
 			widget.NewLabel(""),
 			welcomeLabel,
 			widget.NewLabel(""),
@@ -872,7 +896,7 @@ func main() {
 		)
 	}
 
-	myWindow.SetContent(welcomeContent)
+	myWindow.SetContent(bankWindow.WelcomeContent)
 	myWindow.Resize(fyne.NewSize(600, 800))
 	myWindow.ShowAndRun()
 }
